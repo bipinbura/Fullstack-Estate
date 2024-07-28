@@ -3,7 +3,7 @@ import Home from '../Pages/Home';
 import About from '../Pages/Home';
 import Profile from '../Pages/Profile';
 import SignIn from '../Pages/SignIn';
-import SignOut from '../Pages/SignOut'
+import SignUp from '../Pages/SignUp'
 import Layout from "../Layout/Layout";
 
 // export  const Route = createBrowserRouter([
@@ -36,7 +36,7 @@ export const route = createBrowserRouter(
        <Route path='about' element={<About/>}/>
        <Route path='profile' element={<Profile/>}/>
        <Route path='signin' element={<SignIn/>}/>
-       <Route path='signout' element={<SignOut/>}/>
+       <Route path='signup' element={<SignUp/>}/>
      </Route>
   )
 )
