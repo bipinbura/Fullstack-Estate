@@ -2,6 +2,7 @@ import InputBox from "../UI/InputBox/InputBox"
 import { Link, useNavigate } from 'react-router-dom'
 import Button from "../UI/Button/Button"
 import { useState } from "react"
+import Oauth from "../GoogleAuth/Oauth";
 function SignUp() {
   const [formData, setFormData] = useState({});
   const [error, setError] = useState(null);
@@ -59,6 +60,7 @@ function SignUp() {
         <InputBox type={"text"} placeholder={"email"} id={"email"} onChange={handleChange} />
         <InputBox type={"text"} placeholder={"password"} id={"password"} onChange={handleChange} />
         <Button load={loading} text={'SignUp'} />
+        <Oauth/>
       </form>
       <div className="flex gap-2 mt-5">
         <p>Have an account</p>

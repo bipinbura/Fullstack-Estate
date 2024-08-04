@@ -11,7 +11,7 @@
     })
 }
 
-const generateAccessAndRefreshTokens= async(userId)=>{
+export const generateAccessAndRefreshTokens= async(userId)=>{
     try {
         const user = await User.findById(userId)
         const accessToken = user.generateAccessToken()

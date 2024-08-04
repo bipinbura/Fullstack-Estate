@@ -5,6 +5,7 @@ import Button from "../UI/Button/Button"
 import { useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { signInFailure, signInStart, signInSuccess } from "../../redux/user/userSlice"
+import Oauth from "../GoogleAuth/Oauth"
 
 function SignIn() {
   const [formData, setFormData] = useState({});
@@ -59,6 +60,7 @@ function SignIn() {
         <InputBox type={"text"} placeholder={"email"} id={"email"} onChange={handleChange} />
         <InputBox type={"text"} placeholder={"password"} id={"password"} onChange={handleChange} />
         <Button load={loading} text={'Sign In'} />
+        <Oauth/>
       </form>
       <div className="flex gap-2 mt-5">
         <p>Not have an account</p>

@@ -11,10 +11,11 @@ app.use(cookieParser()) //cookie are two way access
 
 //imports routes
 import userRouter from './routes/users.route.js'
-
+import googleRouter from './routes/googleauth.routes.js'
 
 //use route
 app.use("/api/users", userRouter);
+app.use("/api/auth", googleRouter)
 
 
 export {app}
