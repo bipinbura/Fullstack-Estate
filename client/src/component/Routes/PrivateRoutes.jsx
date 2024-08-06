@@ -6,6 +6,7 @@ function PrivateRoutes() {
   return (
        <>
        {currentUser ? <Outlet/> : <Navigate to='/signin' />}
+       
        </>
   )
 }
