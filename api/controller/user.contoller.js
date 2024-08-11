@@ -91,12 +91,9 @@ const signIn = asyncHandler(async (req, res)=>{
     return res
     .status(200)
     .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
     .json(
         new ApiResponse(
-            200, {
-                user: loggedInInUser, accessToken, refreshToken , user
-            },
+            200, user ,
           "user Logged in successfully"  
         )
     )
@@ -106,8 +103,8 @@ const signIn = asyncHandler(async (req, res)=>{
 const logout = asyncHandler(async (req, res)=>{
     await  User.findByIdAndUpdate(
         req.user._id, {
-            $set:{
-                refreshToken: undefined
+            $unset:{
+                refreshToken: 1
             }
         },
         {new:true}
@@ -120,9 +117,88 @@ const logout = asyncHandler(async (req, res)=>{
     return res
     .status(200)
     .clearCookie("accessToken", options)
-    .clearCookie("refreshToken", options)
     .json(new ApiResponse(200, {}, "User Logout successfully"))
 })
 
 
-export {test , signUp , signIn , logout}
+const updateUserDetail = asyncHandler(async(req, res)=>{
+    const {username, email} = req.body;
+     
+    if(!username && !email) {
+        throw new ApiError (400, 'At least one field are required')
+    }
+
+
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+        $set: {
+            email,
+            username
+        } 
+        },{new:true}
+    ).select('-password -refreshToken')
+
+    if(!user){
+        throw new ApiError(404, 'User count not be updated')
+    }
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Account details updated successfully"))
+})
+
+const changePassword = asyncHandler(async (req, res)=>{
+    const {oldPassword, newPassword} = req.body;
+
+    if(!oldPassword || !newPassword){
+         throw new ApiError(400, 'Both oldPassword and newPassword is required')
+    }
+
+    const user = await User.findById(req.user?._id) //req.user is coming from authmiddleware
+    if(!user){
+        throw new ApiError(404, 'User not found')
+    }
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+
+    if(!isPasswordCorrect){
+        throw new ApiError(400, 'Invalid oldPaasword ')
+    }
+
+    user.password = newPassword
+    await user.save({validateBeforeSave: false})
+
+    return res.status(200).
+    json(new ApiResponse(200, {} , 'Password changed successfully'))
+
+})
+
+const deleteUser = asyncHandler(async(req, res)=>{
+const userId = req.user?._id;
+
+if(!userId){
+    throw new ApiError(400, 'User ID not provided')
+}
+ 
+const user = await User.findByIdAndDelete(userId);
+
+if (!user) {
+    throw new ApiError(404, 'User not found or already deleted');
+}
+
+return res
+.status(200)
+.clearCookie('accessToken')
+.json(new ApiResponse(200, null, 'Account deleted successfully'))
+})
+
+
+export {test ,
+     signUp ,
+      signIn ,
+       logout,
+       updateUserDetail,
+       changePassword,
+       deleteUser,
+    
+    }

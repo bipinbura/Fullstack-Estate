@@ -1,6 +1,6 @@
 
 
-function Button({text, load}) {
+function Button({text, load=null }) {
     return (
         <>
             <button disabled={load}
