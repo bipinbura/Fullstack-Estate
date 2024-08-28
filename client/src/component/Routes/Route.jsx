@@ -6,6 +6,7 @@ import SignIn from '../Pages/SignIn';
 import SignUp from '../Pages/SignUp'
 import Layout from "../Layout/Layout";
 import PrivateRoutes from "./PrivateRoutes";
+import CreateList from "../Pages/CreateList";
 // export  const Route = createBrowserRouter([
 //     {
 //         path: "/",
@@ -38,6 +39,8 @@ export const route = createBrowserRouter(
        <Route path='signup' element={<SignUp/>}/>
        <Route element={<PrivateRoutes/>} >
          <Route path='profile' element={<Profile/>}/>
+         <Route path='createListing' element={<CreateList/>}/>
+         
        </Route>
      </Route>
   )

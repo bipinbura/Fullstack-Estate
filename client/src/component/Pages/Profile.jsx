@@ -1,40 +1,59 @@
 import { useSelector } from "react-redux"
 import InputBox from "../UI/InputBox/InputBox"
 import Button from "../UI/Button/Button"
-import { useEffect, useRef, useState } from "react"
-import { getDownloadURL, getStorage, uploadBytesResumable, ref } from 'firebase/storage'
-import { app } from '../../FireBase'
-import { updateUserStart,
-   updateUserSuccess, 
-   updateUserFailure ,
-   deleteUserStart,
-   deleteUserSuccess,
-   deleteUserFailure,
-   signOutUserStart,
-   signOutUserSuccess,
-   signOutUserFailure} from "../../redux/user/userSlice"
+import { useState } from "react"
+import {
+  updateUserStart,
+  updateUserSuccess,
+  updateUserFailure,
+  deleteUserStart,
+  deleteUserSuccess,
+  deleteUserFailure,
+  signOutUserStart,
+  signOutUserSuccess,
+  signOutUserFailure
+} from "../../redux/user/userSlice"
 import { useDispatch } from "react-redux"
+import {Link} from 'react-router-dom'
+import ProfileImage from "../UI/ProfileImage/ProfileImage"
 
 
 function Profile() {
-  const fileRef = useRef(null);
   const { currentUser, loading, error } = useSelector(state => state.user)
-  const [file, setFile] = useState(undefined)
-  const [filePerc, setFilePerc] = useState(0);
-  const [fileUploadError, setFileUploadError] = useState(false)
   const [formData, setFormData] = useState({})
   const [success, setSuccess] = useState(false)
   const dispatch = useDispatch();
 
 
-  function handleChange(e) {
-    setFormData({
-      ...formData,
+  const handleChange = (e) => {
+    setFormData((prevData) => ({
+      ...prevData,
       [e.target.id]: e.target.value
-    })
-    
+    }))
   }
 
+  const handleProfileImageUpdate = async (e) => {
+    e.preventDefault();
+
+    const formDataToSend = new FormData();
+    formDataToSend.append("profileImage", formData.profileImage);
+
+    try {
+      const res = await fetch('/api/users/updateProfileImage', {
+        method: 'POST',
+        credentials: 'include',
+        body: formDataToSend,
+      });
+      const data = await res.json();
+      if (data.success === false) {
+        dispatch(updateUserFailure(data.message));
+        return
+      }
+      dispatch(updateUserSuccess(data))
+    } catch (error) {
+      dispatch(updateUserFailure(error.message))
+    }
+  }
   const handleUpdateDetail = async (e) => {
     e.preventDefault();
     try {
@@ -88,13 +107,18 @@ function Profile() {
     }
   }
 
-//later add settimeout to clear message and error
+  //later add settimeout to clear message and error
   const handleSubmit = async (e) => {
     e.preventDefault();
     if ((formData.oldPassword && !formData.newPassword) || (!formData.oldPassword && formData.newPassword)) {
       dispatch(updateUserFailure("Both old and new password fields are required to change your password."));
       return;
     }
+    // Update profile image if it exists in formData
+    if (formData.profileImage) {
+      await handleProfileImageUpdate(e);
+    }
+
 
     // Check if only the password fields are filled
     const isPasswordChangeOnly = formData.oldPassword && formData.newPassword && !formData.username && !formData.email;
@@ -113,15 +137,15 @@ function Profile() {
     setSuccess(true)
   };
 
-  const handleDeleteUser = async()=>{
+  const handleDeleteUser = async () => {
     try {
       dispatch(deleteUserStart());
-      const res = await fetch('/api/users/delete',{
-        method:'DELETE',
+      const res = await fetch('/api/users/delete', {
+        method: 'DELETE',
         credentials: 'include'
       });
       const data = await res.json();
-      if(data.success === false){
+      if (data.success === false) {
         dispatch(deleteUserFailure(data.message))
         return
       }
@@ -131,56 +155,23 @@ function Profile() {
     }
   }
 
-  const handleSignOut = async()=>{
-  try {
-    dispatch(signOutUserStart())
-    const res = await fetch('/api/users/signout',{
-      method: 'POST',
-      credentials: 'include'
-    })
-    const data = await res.json();
-    if(data.success === false){
-      dispatch(deleteUserFailure(data.message))
-      return
+  const handleSignOut = async () => {
+    try {
+      dispatch(signOutUserStart())
+      const res = await fetch('/api/users/signout', {
+        method: 'POST',
+        credentials: 'include'
+      })
+      const data = await res.json();
+      if (data.success === false) {
+        dispatch(deleteUserFailure(data.message))
+        return
+      }
+      dispatch(signOutUserSuccess(data))
+    } catch (error) {
+      dispatch(signOutUserFailure(error.message))
     }
-    dispatch(signOutUserSuccess(data))
-  } catch (error) {
-    dispatch(signOutUserFailure(error.message))
   }
-  }
-
-
-  // later use cloudinary for storing pictures
-  function handleFileUpload(file) {
-    const storage = getStorage(app);
-    const fileName = new Date().getTime() + file.name;
-    const storageRef = ref(storage, fileName)
-    const uploadTask = uploadBytesResumable(storageRef, file)
-
-    uploadTask.on('state_changed',
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        setFilePerc(Math.round(progress))
-      },
-
-      (error) => {
-        setFileUploadError(true)
-      },
-      () => {
-        getDownloadURL(uploadTask.snapshot.ref).then(
-          (DownloadURL) => {
-            setFormData({ ...formData, avatar: DownloadURL })
-          }
-        )
-      });
-  }
-
-  useEffect(() => {
-    if (file) {
-      handleFileUpload(file);
-    }
-  }, [file])
-
 
   return (
     <div className="p-3 max-w-lg mx-auto">
@@ -188,29 +179,17 @@ function Profile() {
         Profile
       </h1>
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-        <input type="file"
-          onChange={(e) => setFile(e.target.files[0])}
-          ref={fileRef} hidden accept="image/.*" />
-        <img src={formData.avatar || currentUser.avatar} //bug
-          onClick={() => fileRef.current.click()}
-          alt="profile"
-          className=" rounded-full h-24 w-24 object-cover cursor-pointer self-center mt-2" />
-        <p className="'text-sm self-center">
-          {fileUploadError ?
-            (<span className="text-red-700">Error Image upload</span>) :
-            (filePerc > 0 && filePerc < 100 ? (
-              <span className="text-slate-700">{`Uploading ${filePerc}%`}</span>)
-              :
-              filePerc === 100 ? (
-                <span className="text-green-700">Image successfully upload</span>
-              ) : (''))
-          }
-        </p>
+        <ProfileImage formdata={formData} setFormData={setFormData} currentUser={currentUser} />
         <InputBox placeholder="username" id="username" onChange={handleChange} defaultValue={currentUser?.data?.username} />
         <InputBox type="email" placeholder="email" id="email" onChange={handleChange} defaultValue={currentUser?.data?.email} />
         <InputBox type="password" placeholder="oldPassword" id="oldPassword" onChange={handleChange} />
         <InputBox type="password" placeholder="newPassword" id="newPassword" onChange={handleChange} />
-        <Button text={"UPDATE"} load={loading}/>
+        <Button text={"UPDATE"} load={loading} />
+        <Link
+         className="bg-green-700 text-white p-3 rounded-lg uppercase text-center hover:opacity-95" 
+         to={'/createListing'}>
+         Create Listing
+        </Link>
       </form>
       <div className=" flex justify-between mt-5">
         <span className="text-red-700 cursor-pointer" onClick={handleDeleteUser}>Delete Account</span>
@@ -224,6 +203,3 @@ function Profile() {
 
 export default Profile
 
-//firebaseStorage
-// allow read;
-// allow write: if request.resource.size < 2*1024*1024 && request.resource.contentType.matches('image/.*')

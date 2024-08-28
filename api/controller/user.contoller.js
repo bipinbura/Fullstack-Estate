@@ -2,7 +2,7 @@
  import {ApiError} from '../utils/ApiError.utils.js'
  import {ApiResponse} from '../utils/ApiResponse.utils.js'
  import { User } from '../models/user.model.js'
- 
+ import {uploadOnCloudinary, deleteFromCloudinary} from '../utils/cloudinary.utils.js'
  
  
  const test = (req, res)=>{
@@ -134,7 +134,7 @@ const updateUserDetail = asyncHandler(async(req, res)=>{
         {
         $set: {
             email,
-            username
+            username,
         } 
         },{new:true}
     ).select('-password -refreshToken')
@@ -192,13 +192,58 @@ return res
 .json(new ApiResponse(200, null, 'Account deleted successfully'))
 })
 
+const updateUserProfileImage = asyncHandler(async(req, res)=>{
+     const avatarLocalPath = req.file?.path
 
-export {test ,
-     signUp ,
-      signIn ,
-       logout,
-       updateUserDetail,
-       changePassword,
-       deleteUser,
-    
-    }
+     if(!avatarLocalPath){
+        throw new ApiError(400, "Avatar file is missing")
+     }
+
+     const existeduser = await User.findById(req.user?._id);
+
+     if (!existeduser) {
+         throw new ApiError(404, "User not found");
+     }
+ 
+     if (existeduser.profileImage) {
+         const publicId = existeduser.profileImage.split('/').pop().split('.')[0];
+         console.log(publicId)
+         await deleteFromCloudinary(publicId);
+     }
+
+
+     const avatar = await uploadOnCloudinary(avatarLocalPath)
+
+     if(!avatar.url){
+        throw new ApiError(400, "Error while uploading on avatar")
+     }
+
+
+     const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set:{
+                profileImage: avatar.url
+            }
+        },
+        {new:true}
+     ).select("-password -refreshToken")
+
+     return res
+     .status(200)
+     .json(
+        new ApiResponse(200, user, "Profile Image is updated successfully")
+     )
+})
+
+
+export {
+  test,
+  signUp,
+  signIn,
+  logout,
+  updateUserDetail,
+  changePassword,
+  deleteUser,
+  updateUserProfileImage,
+};
