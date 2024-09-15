@@ -20,9 +20,10 @@ import ProfileImage from "../UI/ProfileImage/ProfileImage"
 
 function Profile() {
   const { currentUser, loading, error } = useSelector(state => state.user)
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState({})
   const [success, setSuccess] = useState(false)
-  const dispatch = useDispatch();
+  const [list, setList] = useState(undefined)
 
 
   const handleChange = (e) => {
@@ -32,7 +33,7 @@ function Profile() {
     }))
   }
 
-  const handleProfileImageUpdate = async (e) => {
+  async function handleProfileImageUpdate (e){
     e.preventDefault();
 
     const formDataToSend = new FormData();
@@ -54,7 +55,7 @@ function Profile() {
       dispatch(updateUserFailure(error.message))
     }
   }
-  const handleUpdateDetail = async (e) => {
+  async function handleUpdateDetail (e){
     e.preventDefault();
     try {
       dispatch(updateUserStart());
@@ -82,7 +83,7 @@ function Profile() {
     }
   }
 
-  const handlePasswordChange = async (e) => {
+  async function handlePasswordChange (e){
     e.preventDefault();
     try {
       const res = await fetch('/api/users/changePassword', {
@@ -108,7 +109,7 @@ function Profile() {
   }
 
   //later add settimeout to clear message and error
-  const handleSubmit = async (e) => {
+  async function handleSubmit (e){
     e.preventDefault();
     if ((formData.oldPassword && !formData.newPassword) || (!formData.oldPassword && formData.newPassword)) {
       dispatch(updateUserFailure("Both old and new password fields are required to change your password."));
@@ -135,9 +136,9 @@ function Profile() {
       }
     }
     setSuccess(true)
-  };
+  }
 
-  const handleDeleteUser = async () => {
+  async function handleDeleteUser (){
     try {
       dispatch(deleteUserStart());
       const res = await fetch('/api/users/delete', {
@@ -155,7 +156,7 @@ function Profile() {
     }
   }
 
-  const handleSignOut = async () => {
+  async function handleSignOut () {
     try {
       dispatch(signOutUserStart())
       const res = await fetch('/api/users/signout', {
@@ -170,6 +171,43 @@ function Profile() {
       dispatch(signOutUserSuccess(data))
     } catch (error) {
       dispatch(signOutUserFailure(error.message))
+    }
+  }
+
+  async function showListing (e) {
+      e.preventDefault();
+      try {
+        const response = await fetch('/api/list/getListing', {
+        method: 'POST',
+        credentials: 'include'})
+        const data = await response.json()
+        setList(data.data);
+           console.log(data.data)
+      } catch (error) {
+        console.log(error)
+      }
+  }
+
+  async function handleDeleteList(id) {
+    try {
+      const res = await fetch('/api/list/deleteListing', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          _id:id
+        }),
+      });
+      const data = await res.json();
+      if(data.success === false){
+        return
+      }
+
+      setList((pre)=>pre.filter((list)=> list._id !== id))
+    } catch (error) {
+      console.log(error.message)
     }
   }
 
@@ -195,9 +233,45 @@ function Profile() {
         <span className="text-red-700 cursor-pointer" onClick={handleDeleteUser}>Delete Account</span>
         <span className="text-red-700 cursor-pointer" onClick={handleSignOut}>Sign Out</span>
       </div>
+      <div className=" grid items-center">
       {error && <p className="text-red-500 mt-5">{error}</p>}
       {success && <p className="text-green-500 mt-5">Success</p>}
-    </div>
+      <Button text='Show Listing' onClick={showListing}/>
+      </div>
+      {list && list.length > 0 && 
+      <div className="flex flex-col gap-4">
+        <h1 className="text-center mt-7 text-2xl font-semibold">
+          Your Listing
+        </h1>
+     { list.map((listing)=>(
+
+        <div key={listing._id}
+         className="border rounded-lg p-3 flex justify-between items-center gap-4" >
+          <Link to={`/listedPage/${listing._id}`}>
+          <img src={listing.imageUrls[0]} 
+           alt="listing cover"
+           className="h-16 object-contain gap-4"  
+             />  
+          </Link>
+          <Link className="text-slate-700 font-semibold flex-1 hover:underline truncate"
+          to={`/listedPage/${listing._id}`}>
+          <p>
+          {listing.name}
+          </p>
+          </Link>
+          <div className=" flex flex-col items-center" >
+           <Button text='Delete' className="text-red-700 uppercase" onClick={()=>handleDeleteList(listing._id)}/>
+           <Link to={`/updateListing/${listing._id}`}>
+           <Button text='Edit' className="text-green-700 uppercase" />
+           </Link>
+          </div>
+
+        </div>
+      ))
+      }
+      </div>
+     }
+    </div> 
   )
 }
 

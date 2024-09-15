@@ -1,11 +1,35 @@
 
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import SearchField from '../../UI/SearchField/SearchField'
 import {useSelector} from 'react-redux'
+import { useEffect, useState } from 'react'
 
 
 function Header() {
+  const [searchTerm, setSearchTerm] = useState('')
   const {currentUser} = useSelector(state => state.user)
+  const nagivate = useNavigate()
+
+  function onChange(value){
+     setSearchTerm(value)
+  }
+
+  function handleSubmit(e){
+     e.preventDefault();
+     const urlParams = new URLSearchParams(window.location.search);
+     urlParams.set('searchTerm', searchTerm);
+     const searchQuery = urlParams.toString();
+     nagivate(`/search?${searchQuery}`);
+  }
+
+  useEffect(()=>{
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchTermFromUrl = urlParams.get('searchTerm');
+    if(searchTermFromUrl){
+      setSearchTerm(searchTermFromUrl)
+    }
+  },[])
+
   return (
        <header className="bg-slate-200 shadow-md">
            <div className="flex justify-between items-center max-w-6xl mx-auto p-3">
@@ -15,7 +39,7 @@ function Header() {
             <span className="text-slate-700">Estate</span>
          </h1>
          </Link>
-         <SearchField/>
+         <SearchField onChange={onChange} value={searchTerm} handleSubmit={handleSubmit}/>
          <ul className='flex gap-4'>
             <Link to='/'>
             <li className='hidden sm:inline text-slate-700 hover:underline '>Home</li>

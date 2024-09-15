@@ -10,6 +10,7 @@ import {
   changePassword,
   deleteUser,
   updateUserProfileImage,
+  getUser
 } from "../controller/user.contoller.js";
 const router = Router();
 
@@ -21,6 +22,6 @@ router.route('/updateuserProfile').put(verifyJWT,updateUserDetail)
 router.route('/changePassword').post(verifyJWT, changePassword)
 router.route('/delete').delete(verifyJWT, deleteUser)
 router.route('/updateProfileImage').post(verifyJWT, upload.single("profileImage"), updateUserProfileImage)
-
+router.route('/getUser/:id').get(verifyJWT, getUser)
 
 export default router

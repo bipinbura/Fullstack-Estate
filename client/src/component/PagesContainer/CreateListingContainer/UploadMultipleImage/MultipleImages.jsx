@@ -9,10 +9,9 @@ function MultipleImages({
 }) {
   const MaxFile = 10;
 
-  // const [file, setFile] = useState([]);
+ 
   const [errorMessage, setErrorMessage] = useState("");
 
-  console.log(image)
 
   function HandleChange(e) {
     const filesArray = Array.from(e.target.files);

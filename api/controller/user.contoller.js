@@ -93,7 +93,7 @@ const signIn = asyncHandler(async (req, res)=>{
     .cookie("accessToken", accessToken, options)
     .json(
         new ApiResponse(
-            200, user ,
+            200, loggedInInUser ,
           "user Logged in successfully"  
         )
     )
@@ -236,6 +236,21 @@ const updateUserProfileImage = asyncHandler(async(req, res)=>{
      )
 })
 
+const getUser = asyncHandler(async(req,res)=>{
+     const Id = req.params.id;
+     if(!Id){
+        throw new ApiError(400,"User is not found")
+     }
+
+     const user = User.findById(Id).select('-password -refreshToken');
+     if(!user){
+        throw new ApiError(400,'Something went wrong while searching for user')
+     }
+
+     return res.
+     status(400)
+     .json(user)
+})
 
 export {
   test,
@@ -246,4 +261,5 @@ export {
   changePassword,
   deleteUser,
   updateUserProfileImage,
+  getUser
 };

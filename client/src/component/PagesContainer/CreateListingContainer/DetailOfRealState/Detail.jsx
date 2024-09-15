@@ -26,7 +26,6 @@ function Detail({
       updatedData[id] = value;
     }
     onInput(updatedData)
-    console.log(updatedData)
   }
 
 
@@ -46,7 +45,9 @@ function Detail({
              <NumberBox id={'bedrooms'} label={'Beds'} min={1} max={10} value={formData.bedrooms} onChange={handleChange}/>
              <NumberBox id={'bathrooms'} label={'Baths'} min={1} max={10} value={formData.bathrooms} onChange={handleChange}/>
              <NumberBox id={'regularPrice'} label={'Regular price'} min={50} max={100000} value={formData.regularPrice} onChange={handleChange} condition={RentTrue}/>
-             <NumberBox id={'discountPrice'} label={'Discounted price'} min={20} max={100000} value={formData.discountPrice} onChange={handleChange} condition={RentTrue}/>
+             {formData.offer &&
+                          <NumberBox id={'discountPrice'} label={'Discounted price'} min={20} max={100000} value={formData.discountPrice} onChange={handleChange} condition={RentTrue}/>
+             }
         </div>
     </div>
   )

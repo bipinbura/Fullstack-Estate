@@ -7,38 +7,39 @@ import Button from "../UI/Button/Button"
 
 
 function CreateList() {
-    const [formData, setFormData] = useState({   
-      name: '',
-      description: '',
-      address: '',
-      type: 'rent',
-      bedrooms: 1,
-      bathrooms: 1,
-      regularPrice: 50,
-      discountPrice: 0,
-      offer: false,
-      parking: false,
-      furnished: false,
-      imageUrls:[]
-    })
-  const[image, setImage] = useState([])
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    address: '',
+    type: 'rent',
+    bedrooms: 1,
+    bathrooms: 1,
+    regularPrice: 50,
+    discountPrice: 0,
+    offer: false,
+    parking: false,
+    furnished: false,
+    imageUrls: []
+  })
+  const [image, setImage] = useState([])
+  const [error, setError] = useState('')
 
   const extractUrls = (arr) => {
     return arr.flatMap(item => item.data); // Flatten the array of arrays
-};
+  };
 
- function onChange (value) {
-   setFormData((pre)=> ({...pre, ...value }) )
- }
+  function onChange(value) {
+    setFormData((pre) => ({ ...pre, ...value }))
+  }
 
- function handleImage (value) {
-  setImage((pre)=>[...pre, ...value])
- }
+  function handleImage(value) {
+    setImage((pre) => [...pre, ...value])
+  }
 
 
   async function UploadImage(files) {
-  
-     try {
+
+    try {
       const uploadPromises = files.map(file => {
         const formDatas = new FormData();
         formDatas.append('imageUrls', file);
@@ -46,63 +47,70 @@ function CreateList() {
           method: 'POST',
           credentials: 'include',
           body: formDatas,
-        }).then(res=>res.json());
+        }).then(res => res.json());
       })
-       const results = await Promise.all(uploadPromises)
-       const flatUrl = extractUrls(results)
-       return flatUrl;
-     } catch (error) {
-           console.log(error)
-           return [];
-     } 
- }
-
-const handleSubmit= async(e)=>{
-  e.preventDefault();
-
-  let uploadImageUrls = []
-
-  if(image.length >1 && image.length <= 10) {
-     uploadImageUrls = await UploadImage(image)
-
+      const results = await Promise.all(uploadPromises)
+      const flatUrl = extractUrls(results)
+      return flatUrl;
+    } catch (error) {
+      console.log(error)
+      return [];
+    }
   }
 
-  const completeFormData = {
-    ...formData,
-    imageUrls: uploadImageUrls,
-  }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  try {
-    const res = await fetch('/api/list/createListing',{
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify(completeFormData),
-    })
-    const data = await res.json();
-    console.log(data)
-  } catch (error) {
-    console.log(error)
+    if(+formData.regularPrice < +formData.discountPrice){
+      return setError("Discount price must be lower than regular Price")
+    }
+
+    let uploadImageUrls = []
+
+    if (image && image.length > 1 && image.length <= 10) {
+      uploadImageUrls = await UploadImage(image)
+
+    } else {
+      return setError('At least one Image should be upload ')
+    }
+
+    const completeFormData = {
+      ...formData,
+      imageUrls: uploadImageUrls,
+    }
+
+    try {
+      const res = await fetch('/api/list/createListing', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(completeFormData),
+      })
+      const data = await res.json();
+        return data
+    } catch (error) {
+      console.log(error)
+    }
   }
-}
 
   return (
-        <>
-        <main className="p-3 max-w-4xl mx-auto">
-            <h1 className="text-3xl font-semibold text-center my-7">
-              Create a Listing    
-             </h1>
-             <form onSubmit={handleSubmit} className='flex flex-col sm:flex-row gap-4'>
-                <Detail formData={formData} onInput={onChange} />
-         <div className="flex flex-col">
+    <>
+      <main className="p-3 max-w-4xl mx-auto">
+        <h1 className="text-3xl font-semibold text-center my-7">
+          Create a Listing
+        </h1>
+        <form onSubmit={handleSubmit} className='flex flex-col sm:flex-row gap-4'>
+          <Detail formData={formData} onInput={onChange} />
+          <div className="flex flex-col">
             <MultipleImages image={image} onInput={handleImage} />
+            {error && <p className='text-red-700 text-sm self-start'>{error}</p>}
             <Button text={'Upload'} />
-        </div>
-             </form> 
-        </main>
-        </>
+          </div>
+        </form>
+      </main>
+    </>
   )
 }
 

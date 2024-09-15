@@ -3,7 +3,7 @@ import InputBox from "../InputBox/InputBox"
 function CheckBox({
     id,
     label,
-    checked,
+    checked=undefined,
     onChange,
     className = 'w-5'
 }) {

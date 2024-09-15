@@ -2,23 +2,36 @@ import { useEffect, useState } from "react";
 import Button from "../Button/Button";
 
 
+
 //later improve this component
 
 function ImagePreview({ fileUrl, onDelete }) {
 
     const [imageUrl, setImageUrl] = useState("");
 
-   
+
+    function isValidUrl(str) {
+      try {
+          new URL(str);
+          return true;
+      } catch (_) {
+          return false;
+      }
+  }
     useEffect(() => {
-      if(fileUrl){
+      if(fileUrl && !isValidUrl(fileUrl)){
         const url = URL.createObjectURL(fileUrl);
         setImageUrl(url);
-
+         console.log("useEffect run")
         return () => {
             URL.revokeObjectURL(url);
         };
+      } else if (isValidUrl(fileUrl)){
+     setImageUrl(fileUrl)
       }
     }, [fileUrl]);
+
+
 
     return (
       <div className="relative">

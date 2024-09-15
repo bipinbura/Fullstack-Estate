@@ -9,7 +9,8 @@ function InputBox({
   defaultValue = '',
   required= undefined,
   min=undefined,
-  max=undefined
+  max=undefined,
+  checked=undefined
 }) {
 
   const isControlled = value !== undefined
@@ -28,7 +29,7 @@ function InputBox({
   }
 
   if(type === 'checkbox') {
-    inputProps.value = isControlled ? value : undefined
+    inputProps.checked = isControlled ? checked : undefined //just changed it 
   } else {
     inputProps.value = isControlled ? value : undefined;
     inputProps.defaultValue = !isControlled ? defaultValue : undefined;
